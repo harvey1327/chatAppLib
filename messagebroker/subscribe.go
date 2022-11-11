@@ -34,9 +34,11 @@ func (rbtp *rabbitSubscribe[T]) Subscribe(queueName string) <-chan EventMessage[
 				break
 			}
 			event := subscribeMessage[T]{}
-			err := json.Unmarshal(received.Body, &event)
-			if err != nil {
-				log.Fatal(err)
+			if event.contentType == "application/json" {
+				err := json.Unmarshal(received.Body, &event)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 			results <- event.EventMessage
 		}

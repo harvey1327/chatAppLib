@@ -7,7 +7,6 @@ import (
 )
 
 type subscribeMessage[T any] struct {
-	queueName    string
 	contentType  string
 	EventMessage EventMessage[T] `json:"eventMessage"`
 }
