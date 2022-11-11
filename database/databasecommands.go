@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,6 +37,7 @@ func NewCollection[T any](database DB, collection string) CollectionCommands[T] 
 }
 
 func (m *mongoDBCollectionImpl[T]) InsertOne(object T) (DataWrapper[T], error) {
+	log.Printf("database performing InsertOne operation with: %+v\n", object)
 	res, err := m.collection.InsertOne(context.TODO(), object)
 	if err != nil {
 		return DataWrapper[T]{}, err
@@ -47,6 +49,7 @@ func (m *mongoDBCollectionImpl[T]) InsertOne(object T) (DataWrapper[T], error) {
 }
 
 func (m *mongoDBCollectionImpl[T]) FindByID(id string) (DataWrapper[T], error) {
+	log.Printf("database performing FindByID operation with: %s\n", id)
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return DataWrapper[T]{}, err
@@ -80,6 +83,7 @@ func (fb findBy) convert() bson.M {
 }
 
 func (m *mongoDBCollectionImpl[T]) FindSingleByQuery(query findBy) (DataWrapper[T], error) {
+	log.Printf("database performing FindSingleByQuery operation with: %+v\n", query)
 	var result DataWrapper[T]
 	err := m.collection.FindOne(context.TODO(), query.convert()).Decode(&result)
 	if err != nil {
@@ -92,11 +96,13 @@ func (m *mongoDBCollectionImpl[T]) FindSingleByQuery(query findBy) (DataWrapper[
 }
 
 func (m *mongoDBCollectionImpl[T]) FindByIDAndUpdate(object DataWrapper[T]) error {
+	log.Printf("database performing FindByIDAndUpdate operation with: %+v\n", object)
 	res := m.collection.FindOneAndUpdate(context.TODO(), bson.M{"_id": object.ID}, bson.M{"$set": object})
 	return res.Err()
 }
 
 func (m *mongoDBCollectionImpl[T]) FindMultipleByQuery(query findBy) ([]DataWrapper[T], error) {
+	log.Printf("database performing FindMultipleByQuery operation with: %+v\n", query)
 	results := make([]DataWrapper[T], 0)
 	curr, err := m.collection.Find(context.TODO(), query.convert())
 	if err != nil {

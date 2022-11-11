@@ -22,6 +22,7 @@ func NewRabbitSubscribe[T any](broker MessageBroker) Subscribe[T] {
 }
 
 func (rbtp *rabbitSubscribe[T]) Subscribe(queueName string) <-chan EventMessage[T] {
+	log.Printf("Subscribing to %s\n", queueName)
 	results := make(chan EventMessage[T])
 	msgs, err := rbtp.channel.Consume(queueName, "", true, false, false, false, nil)
 	if err != nil {
@@ -34,11 +35,10 @@ func (rbtp *rabbitSubscribe[T]) Subscribe(queueName string) <-chan EventMessage[
 				break
 			}
 			event := subscribeMessage[T]{}
-			if event.contentType == "application/json" {
-				err := json.Unmarshal(received.Body, &event)
-				if err != nil {
-					log.Fatal(err)
-				}
+			log.Printf("Read message: %+v\n", event)
+			err := json.Unmarshal(received.Body, &event)
+			if err != nil {
+				log.Fatal(err)
 			}
 			results <- event.EventMessage
 		}

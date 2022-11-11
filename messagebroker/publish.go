@@ -3,6 +3,7 @@ package messagebroker
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -26,5 +27,6 @@ func (rbtp *rabbitPublish) Publish(message publishMessage) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Publishing message %+v\n", message)
 	return rbtp.channel.PublishWithContext(context.Background(), "", message.queueName, false, false, amqp.Publishing{ContentType: message.contentType, Body: bytes})
 }
