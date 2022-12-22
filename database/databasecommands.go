@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DataWrapper[T any] struct {
@@ -29,10 +30,34 @@ type mongoDBCollectionImpl[T any] struct {
 	collection *mongo.Collection
 }
 
-func NewCollection[T any](database DB, collection string) CollectionCommands[T] {
+type CollectionOptions func(col *mongo.Collection) error
+
+func UniqueFields(fieldNames ...string) CollectionOptions {
+	return func(col *mongo.Collection) error {
+		if len(fieldNames) != 0 {
+			keys := bson.D{}
+			for _, fieldName := range fieldNames {
+				keys = append(keys, primitive.E{Key: fieldName, Value: 1})
+			}
+			index, err := col.Indexes().CreateOne(context.Background(), mongo.IndexModel{Keys: keys, Options: options.Index().SetUnique(true)})
+			log.Printf("database index: %s created for collection: %s\n", index, col.Name())
+			return err
+		}
+		return nil
+	}
+}
+
+func NewCollection[T any](database DB, collection string, options ...CollectionOptions) CollectionCommands[T] {
+	col := database.getDatabase().Collection(collection)
+	for _, option := range options {
+		err := option(col)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	return &mongoDBCollectionImpl[T]{
 		database:   database.getDatabase(),
-		collection: database.getDatabase().Collection(collection),
+		collection: col,
 	}
 }
 
