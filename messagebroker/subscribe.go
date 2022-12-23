@@ -8,23 +8,26 @@ import (
 )
 
 type Subscribe[T any] interface {
-	Subscribe(queueName string) <-chan EventMessage[T]
+	Subscribe() <-chan EventMessage[T]
 }
 
 type rabbitSubscribe[T any] struct {
-	channel *amqp.Channel
+	channel   *amqp.Channel
+	queueName string
 }
 
-func NewRabbitSubscribe[T any](broker MessageBroker) Subscribe[T] {
+func NewRabbitSubscriber[T any](broker MessageBroker, queueName string) Subscribe[T] {
+	broker.declareQueue(queueName)
 	return &rabbitSubscribe[T]{
-		channel: broker.getChannel(),
+		channel:   broker.getChannel(),
+		queueName: queueName,
 	}
 }
 
-func (rbtp *rabbitSubscribe[T]) Subscribe(queueName string) <-chan EventMessage[T] {
-	log.Printf("Subscribing to %s\n", queueName)
+func (rbtp *rabbitSubscribe[T]) Subscribe() <-chan EventMessage[T] {
+	log.Printf("Subscribing to %s\n", rbtp.queueName)
 	results := make(chan EventMessage[T])
-	msgs, err := rbtp.channel.Consume(queueName, "", true, false, false, false, nil)
+	msgs, err := rbtp.channel.Consume(rbtp.queueName, "", true, false, false, false, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
