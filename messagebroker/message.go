@@ -7,13 +7,11 @@ import (
 )
 
 type subscribeMessage[T any] struct {
-	queueName    string
 	contentType  string
 	EventMessage EventMessage[T] `json:"eventMessage"`
 }
 
 type publishMessage struct {
-	queueName    string
 	contentType  string
 	EventMessage EventMessage[interface{}] `json:"eventMessage"`
 }
@@ -34,11 +32,10 @@ const (
 	FAILED   status = "FAILED"
 )
 
-func PublishMessage(body interface{}, queueName string) publishMessage {
+func PublishMessage(body interface{}) publishMessage {
 	return publishMessage{
 		contentType:  "application/json",
 		EventMessage: EventMessage[interface{}]{Status: PENDING, Body: body, EventID: uuid.New().String(), TimeStamp: time.Now().UTC()},
-		queueName:    queueName,
 	}
 }
 

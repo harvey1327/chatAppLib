@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/harvey1327/chatapplib/messagebroker/events/createroom"
-	"github.com/harvey1327/chatapplib/messagebroker/events/createuser"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type MessageBroker interface {
 	CloseConnection()
 	getChannel() *amqp.Channel
+	declareQueue(queueName string)
 }
 
 type rabbitMessageBroker struct {
@@ -67,9 +66,6 @@ func NewRabbitMQ(config messageBrokerConfig) MessageBroker {
 		connection: connection,
 		channel:    channel,
 	}
-
-	broker.declareQueue(createuser.QUEUE_NAME)
-	broker.declareQueue(createroom.QUEUE_NAME)
 
 	return broker
 }

@@ -13,12 +13,15 @@ type Publish interface {
 }
 
 type rabbitPublish struct {
-	channel *amqp.Channel
+	channel   *amqp.Channel
+	queueName string
 }
 
-func NewRabbitPublish(broker MessageBroker) Publish {
+func NewRabbitPublisher(broker MessageBroker, queueName string) Publish {
+	broker.declareQueue(queueName)
 	return &rabbitPublish{
-		channel: broker.getChannel(),
+		channel:   broker.getChannel(),
+		queueName: queueName,
 	}
 }
 
@@ -28,5 +31,5 @@ func (rbtp *rabbitPublish) Publish(message publishMessage) error {
 		return err
 	}
 	log.Printf("Publishing message %+v\n", message)
-	return rbtp.channel.PublishWithContext(context.Background(), "", message.queueName, false, false, amqp.Publishing{ContentType: message.contentType, Body: bytes})
+	return rbtp.channel.PublishWithContext(context.Background(), "", rbtp.queueName, false, false, amqp.Publishing{ContentType: message.contentType, Body: bytes})
 }
