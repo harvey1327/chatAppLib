@@ -37,13 +37,13 @@ func (rbtp *rabbitSubscribe[T]) Subscribe() <-chan EventMessage[T] {
 			if !ok {
 				break
 			}
-			event := subscribeMessage[T]{}
+			event := EventMessage[T]{}
 			log.Printf("Read message: %+v\n", event)
 			err := json.Unmarshal(received.Body, &event)
 			if err != nil {
 				log.Fatal(err)
 			}
-			results <- event.EventMessage
+			results <- event
 		}
 		close(results)
 	}()

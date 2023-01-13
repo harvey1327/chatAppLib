@@ -2,19 +2,7 @@ package messagebroker
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
-
-type subscribeMessage[T any] struct {
-	contentType  string
-	EventMessage EventMessage[T] `json:"eventMessage"`
-}
-
-type publishMessage struct {
-	contentType  string
-	EventMessage EventMessage[interface{}] `json:"eventMessage"`
-}
 
 type EventMessage[T any] struct {
 	EventID   string    `json:"eventID" bson:"eventID"`
@@ -31,13 +19,6 @@ const (
 	COMPLETE status = "COMPLETE"
 	FAILED   status = "FAILED"
 )
-
-func PublishMessage(body interface{}) publishMessage {
-	return publishMessage{
-		contentType:  "application/json",
-		EventMessage: EventMessage[interface{}]{Status: PENDING, Body: body, EventID: uuid.New().String(), TimeStamp: time.Now().UTC()},
-	}
-}
 
 func (event *EventMessage[T]) Complete() {
 	event.Status = COMPLETE
