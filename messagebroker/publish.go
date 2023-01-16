@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/harvey1327/chatapplib/models/message"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Publish[T any] interface {
-	Publish(message T) (EventMessage[T], error)
+	Publish(message T) (message.EventMessage[T], error)
 }
 
 type rabbitPublish[T any] struct {
@@ -27,8 +28,8 @@ func NewRabbitPublisher[T any](broker MessageBroker, queueName string) Publish[T
 	}
 }
 
-func (rbtp *rabbitPublish[T]) Publish(message T) (EventMessage[T], error) {
-	event := EventMessage[T]{Status: PENDING, Body: message, EventID: uuid.New().String(), TimeStamp: time.Now().UTC()}
+func (rbtp *rabbitPublish[T]) Publish(msg T) (message.EventMessage[T], error) {
+	event := message.EventMessage[T]{Status: message.PENDING, Body: msg, EventID: uuid.New().String(), TimeStamp: time.Now().UTC()}
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		return event, err
