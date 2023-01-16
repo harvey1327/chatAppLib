@@ -2,8 +2,10 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/harvey1327/chatapplib/models/message"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -47,7 +49,7 @@ func UniqueFields(fieldNames ...string) CollectionOptions {
 	}
 }
 
-func NewCollection[T any](database DB, collection string, options ...CollectionOptions) CollectionCommands[T] {
+func NewCollection[T any](database DB, collection string, options ...CollectionOptions) (models CollectionCommands[T], events CollectionCommands[message.EventMessage[T]]) {
 	col := database.getDatabase().Collection(collection)
 	for _, option := range options {
 		err := option(col)
@@ -55,10 +57,15 @@ func NewCollection[T any](database DB, collection string, options ...CollectionO
 			log.Fatal(err)
 		}
 	}
-	return &mongoDBCollectionImpl[T]{
+	models = &mongoDBCollectionImpl[T]{
 		database:   database.getDatabase(),
 		collection: col,
 	}
+	events = &mongoDBCollectionImpl[message.EventMessage[T]]{
+		database:   database.getDatabase(),
+		collection: database.getDatabase().Collection(fmt.Sprintf("%s.event", collection)),
+	}
+	return
 }
 
 func (m *mongoDBCollectionImpl[T]) InsertOne(object T) (DataWrapper[T], error) {
