@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/harvey1327/chatapplib/models/message"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Subscribe[T any] interface {
-	Subscribe() <-chan EventMessage[T]
+	Subscribe() <-chan message.EventMessage[T]
 }
 
 type rabbitSubscribe[T any] struct {
@@ -24,9 +25,9 @@ func NewRabbitSubscriber[T any](broker MessageBroker, queueName string) Subscrib
 	}
 }
 
-func (rbtp *rabbitSubscribe[T]) Subscribe() <-chan EventMessage[T] {
+func (rbtp *rabbitSubscribe[T]) Subscribe() <-chan message.EventMessage[T] {
 	log.Printf("Subscribing to %s\n", rbtp.queueName)
-	results := make(chan EventMessage[T])
+	results := make(chan message.EventMessage[T])
 	msgs, err := rbtp.channel.Consume(rbtp.queueName, "", true, false, false, false, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +38,7 @@ func (rbtp *rabbitSubscribe[T]) Subscribe() <-chan EventMessage[T] {
 			if !ok {
 				break
 			}
-			event := EventMessage[T]{}
+			event := message.EventMessage[T]{}
 			log.Printf("Read message: %+v\n", event)
 			err := json.Unmarshal(received.Body, &event)
 			if err != nil {
