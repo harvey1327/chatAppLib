@@ -2,7 +2,10 @@ module github.com/harvey1327/chatapplib/database
 
 go 1.19
 
-require go.mongodb.org/mongo-driver v1.10.2
+require (
+	github.com/harvey1327/chatapplib/models v1.2.0
+	go.mongodb.org/mongo-driver v1.10.2
+)
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect
