@@ -7,9 +7,9 @@ import (
 type EventMessage[T any] struct {
 	EventID   string    `json:"eventID" bson:"eventID"`
 	Status    status    `json:"status" bson:"status"`
-	Body      T         `json:"body,omitempty" bson:"body"`
-	Error     string    `json:"error,omitempty" bson:"error"`
-	ModelID   string    `json:"modelID,omitempty" bson:"modelID"`
+	Body      T         `json:"body,omitempty" bson:"body,omitempty"`
+	Error     string    `json:"error,omitempty" bson:"error,omitempty"`
+	ModelID   string    `json:"modelID,omitempty" bson:"modelID,omitempty"`
 	TimeStamp time.Time `json:"time" bson:"time"`
 }
 
