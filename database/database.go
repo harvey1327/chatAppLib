@@ -27,6 +27,7 @@ type dBConfig struct {
 }
 
 const USER = "user"
+const ROOM = "room"
 
 func DBConfig(host string, port int, username string, password string) dBConfig {
 	return dBConfig{
