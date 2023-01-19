@@ -25,7 +25,7 @@ func (event EventMessage[T]) Complete(modelID string) EventMessage[T] {
 	return EventMessage[T]{
 		EventID:   event.EventID,
 		Status:    COMPLETE,
-		Body:      *new(T),
+		Body:      event.Body,
 		ModelID:   modelID,
 		TimeStamp: event.TimeStamp,
 	}
