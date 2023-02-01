@@ -6,7 +6,7 @@ option go_package = "github.com/harvey1327/chatapplib/proto/generated/roompb";
 import "google/protobuf/timestamp.proto";
 
 service Service {
-    rpc GetByEventID(GetByEventIDRequest) returns (EventMessage);
+    rpc GetByEventID(GetByEventIDRequest) returns (stream EventMessage);
 }
 
 message EventMessage {
