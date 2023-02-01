@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceClient interface {
-	GetByEventID(ctx context.Context, in *GetByEventIDRequest, opts ...grpc.CallOption) (*EventMessage, error)
+	GetByEventID(ctx context.Context, in *GetByEventIDRequest, opts ...grpc.CallOption) (Service_GetByEventIDClient, error)
 }
 
 type serviceClient struct {
@@ -33,20 +33,43 @@ func NewServiceClient(cc grpc.ClientConnInterface) ServiceClient {
 	return &serviceClient{cc}
 }
 
-func (c *serviceClient) GetByEventID(ctx context.Context, in *GetByEventIDRequest, opts ...grpc.CallOption) (*EventMessage, error) {
-	out := new(EventMessage)
-	err := c.cc.Invoke(ctx, "/user.Service/GetByEventID", in, out, opts...)
+func (c *serviceClient) GetByEventID(ctx context.Context, in *GetByEventIDRequest, opts ...grpc.CallOption) (Service_GetByEventIDClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Service_ServiceDesc.Streams[0], "/user.Service/GetByEventID", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &serviceGetByEventIDClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Service_GetByEventIDClient interface {
+	Recv() (*EventMessage, error)
+	grpc.ClientStream
+}
+
+type serviceGetByEventIDClient struct {
+	grpc.ClientStream
+}
+
+func (x *serviceGetByEventIDClient) Recv() (*EventMessage, error) {
+	m := new(EventMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
 type ServiceServer interface {
-	GetByEventID(context.Context, *GetByEventIDRequest) (*EventMessage, error)
+	GetByEventID(*GetByEventIDRequest, Service_GetByEventIDServer) error
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -54,8 +77,8 @@ type ServiceServer interface {
 type UnimplementedServiceServer struct {
 }
 
-func (UnimplementedServiceServer) GetByEventID(context.Context, *GetByEventIDRequest) (*EventMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetByEventID not implemented")
+func (UnimplementedServiceServer) GetByEventID(*GetByEventIDRequest, Service_GetByEventIDServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetByEventID not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -70,22 +93,25 @@ func RegisterServiceServer(s grpc.ServiceRegistrar, srv ServiceServer) {
 	s.RegisterService(&Service_ServiceDesc, srv)
 }
 
-func _Service_GetByEventID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetByEventIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Service_GetByEventID_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetByEventIDRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ServiceServer).GetByEventID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/user.Service/GetByEventID",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).GetByEventID(ctx, req.(*GetByEventIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ServiceServer).GetByEventID(m, &serviceGetByEventIDServer{stream})
+}
+
+type Service_GetByEventIDServer interface {
+	Send(*EventMessage) error
+	grpc.ServerStream
+}
+
+type serviceGetByEventIDServer struct {
+	grpc.ServerStream
+}
+
+func (x *serviceGetByEventIDServer) Send(m *EventMessage) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
@@ -94,12 +120,13 @@ func _Service_GetByEventID_Handler(srv interface{}, ctx context.Context, dec fun
 var Service_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "user.Service",
 	HandlerType: (*ServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "GetByEventID",
-			Handler:    _Service_GetByEventID_Handler,
+			StreamName:    "GetByEventID",
+			Handler:       _Service_GetByEventID_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "user.proto",
 }
